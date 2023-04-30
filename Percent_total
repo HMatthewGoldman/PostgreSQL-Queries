@@ -1,0 +1,38 @@
+--What percent of the population died from COVID
+--by Country
+SELECT
+	location,
+	max_population,
+	max_deaths,
+	SUM(max_deaths)/SUM(max_population) * 100 AS percent_population_died
+FROM(
+	SELECT 
+		location,
+		MAX(population) AS max_population,
+	   	MAX(total_deaths) AS max_deaths
+	FROM public.covid_deaths
+	GROUP BY 
+		location) AS DeathsByPopulation
+WHERE location NOT IN ('World','Europe','North America','European Union','South America','Asia','Africa','Oceania','High income','Low income','Lower middle income','Upper middle income')
+GROUP BY 
+	DeathsByPopulation.location,
+	max_population,
+	max_deaths
+ORDER BY 
+	 percent_population_died DESC NULLS LAST
+--By Continent
+SELECT
+	continent,
+	SUM(max_population) AS total_continent_population,
+	SUM(max_deaths) AS total_continent_deaths,
+	SUM(max_deaths)/SUM(max_population) * 100 AS percent_continent_died
+FROM(
+	SELECT
+		continent,
+		MAX(population) AS max_population,
+		MAX(total_deaths) AS max_deaths
+	FROM public.covid_deaths
+	GROUP BY continent) AS DeathsByContinentPopulation
+WHERE continent IS NOT NULL
+GROUP BY continent
+ORDER BY percent_continent_died DESC NULLS LAST
