@@ -1,0 +1,20 @@
+--TOPIC: Time Series
+--cases per month - total
+SELECT
+	extract('year' FROM date) AS year,
+	extract('month' FROM date) AS month,
+	SUM(new_cases) AS monthly_cases
+FROM public.covid_deaths
+WHERE location NOT IN ('World','Europe','North America','European Union','South America','Asia','Africa','Oceania','High income','Low income','Lower middle income','Upper middle income')
+GROUP BY year,month
+ORDER BY year,month;
+--cases per month - by continent
+SELECT
+	extract('year' FROM date) AS year,
+	extract('month' FROM date) AS month,
+	continent,
+	SUM(new_cases) AS monthly_cases
+FROM public.covid_deaths
+WHERE continent IN ('Europe','North America','South America','Asia','Africa','Oceania','Austrailia')
+GROUP BY year,month,continent
+ORDER BY year,month,continent;
