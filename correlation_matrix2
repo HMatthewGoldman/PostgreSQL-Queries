@@ -1,0 +1,123 @@
+--http://www.silota.com/docs/recipes/sql-correlation-coefficient-matrix-summary.html
+--SELECT *
+--FROM public.correlation_matrix;
+
+SELECT variable1,
+	SUM(CASE WHEN variable2='reproduction_rate'THEN correlation ELSE 0 END) as reproduction_rate,
+	SUM(CASE WHEN variable2='population_density'THEN correlation ELSE 0 END) as population_density,
+	SUM(CASE WHEN variable2='hospital_beds_per_thousand'THEN correlation ELSE 0 END) as hospital_beds_per_thousand,
+	SUM(CASE WHEN variable2='total_vaccinations'THEN correlation ELSE 0 END) as total_vaccinations,
+	SUM(CASE WHEN variable2='gdp_per_capita'THEN correlation ELSE 0 END) as gdp_per_capita
+FROM (
+SELECT 
+  var1 AS variable1, 
+  var2 AS variable2, 
+  correlation 
+FROM (
+SELECT 
+  'reproduction_rate' AS var1, 
+  'reproduction_rate' AS var2, 
+  corr(cd.reproduction_rate, cd.reproduction_rate) AS correlation 
+FROM public.covid_deaths cd
+UNION
+SELECT 
+  'reproduction_rate' AS var1, 
+  'population_density' AS var2, 
+  corr(cd.reproduction_rate, dem.population_density) AS correlation 
+FROM public.covid_deaths cd
+	JOIN public.covid_demographics dem
+		ON cd.date=dem.date
+UNION 
+SELECT 
+  'reproduction_rate' AS var1, 
+  'hospital_beds_per_thousand' AS var2, 
+  corr(cd.reproduction_rate, dem.hospital_beds_per_thousand) AS correlation 
+FROM public.covid_deaths cd
+	JOIN public.covid_demographics dem
+		ON cd.date=dem.date
+UNION 
+SELECT 
+  'reproduction_rate' AS var1, 
+  'total_vaccinations' AS var2, 
+  corr(cd.reproduction_rate, cv.total_vaccinations) AS correlation 
+FROM public.covid_deaths cd
+	JOIN public.covid_vaccinations cv
+		ON cd.date=cv.date 
+UNION 
+SELECT 
+  'reproduction_rate' AS var1, 
+  'gdp_per_capita' AS var2, 
+  corr(cd.reproduction_rate, dem.gdp_per_capita) AS correlation 
+FROM public.covid_deaths cd
+	JOIN public.covid_demographics dem
+		ON cd.date=dem.date
+UNION 
+SELECT 
+  'population_density' AS var1, 
+  'population_density' AS var2, 
+  corr(population_density, population_density) AS correlation 
+FROM public.covid_demographics
+UNION 
+SELECT 
+  'population_density' AS var1, 
+  'hospital_beds_per_thousand' AS var2, 
+  corr(population_density, hospital_beds_per_thousand) AS correlation 
+FROM public.covid_demographics
+UNION 
+SELECT 
+  'population_density' AS var1, 
+  'total_vaccinations' AS var2, 
+  corr(dem.population_density, cv.total_vaccinations) AS correlation 
+FROM public.covid_demographics dem
+	JOIN public.covid_vaccinations cv
+		ON dem.date=cv.date
+UNION 
+SELECT 
+  'population_density' AS var1, 
+  'gdp_per_capita' AS var2, 
+  corr(population_density, gdp_per_capita) AS correlation 
+FROM public.covid_demographics
+UNION 
+SELECT 
+  'hospital_beds_per_thousand' AS var1, 
+  'total_vaccinations' AS var2, 
+  corr(dem.hospital_beds_per_thousand, cv.total_vaccinations) AS correlation 
+FROM public.covid_demographics dem
+	JOIN public.covid_vaccinations cv
+		ON dem.date=cv.date
+UNION
+SELECT 
+  'hospital_beds_per_thousand' AS var1, 
+  'hospital_beds_per_thousand' AS var2, 
+  corr(dem.hospital_beds_per_thousand, dem.hospital_beds_per_thousand) AS correlation 
+FROM public.covid_demographics dem
+UNION
+SELECT 
+  'hospital_beds_per_thousand' AS var1, 
+  'gdp_per_capita' AS var2, 
+  corr(hospital_beds_per_thousand, gdp_per_capita) AS correlation 
+FROM public.covid_demographics
+UNION
+SELECT 
+  'total_vaccinations' AS var1, 
+  'total_vaccinations' AS var2, 
+  corr(cv.total_vaccinations, cv.total_vaccinations) AS correlation 
+FROM public.covid_vaccinations cv
+UNION
+SELECT 
+  'total_vaccinations' AS var1, 
+  'gdp_per_capita' AS var2, 
+  corr(cv.total_vaccinations, dem.gdp_per_capita) AS correlation 
+FROM public.covid_vaccinations cv
+	JOIN public.covid_demographics dem
+		ON cv.date=dem.date) AS subquery
+UNION
+SELECT 
+  'gdp_per_capita' AS var1, 
+  'gdp_per_capita' AS var2, 
+  corr(gdp_per_capita, gdp_per_capita) AS correlation 
+FROM public.covid_demographics
+
+) AS subquery
+GROUP BY variable1
+ORDER BY reproduction_rate,population_density,hospital_beds_per_thousand,total_vaccinations,gdp_per_capita;
