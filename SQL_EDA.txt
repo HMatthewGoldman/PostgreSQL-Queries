@@ -1,0 +1,103 @@
+
+--Shows only those records that duplicate(based on columns selected)
+SELECT title, release_year, language_id, rental_duration, COUNT(*)
+FROM film
+GROUP BY title, release_year, language_id, rental_duration
+HAVING COUNT(*) > 1
+ORDER BY COUNT(*);
+
+ title | release_year | language_id | rental_duration | count
+-------+--------------+-------------+-----------------+-------
+(0 rows)
+
+--Shows only those records that duplicate
+SELECT first_name, last_name, email, COUNT(*)
+FROM customer
+GROUP BY first_name, last_name, email
+HAVING COUNT(*)>1;
+first_name | last_name | email | count
+------------+-----------+-------+-------
+(0 rows)
+
+-- Search for blanks/null
+SELECT *
+FROM customer
+WHERE customer_id IS NULL
+	OR store_id IS NULL
+	OR first_name IS NULL
+	OR last_name IS NULL
+	OR email IS NULL
+	OR address_id IS NULL
+	OR activebool IS NULL
+	OR create_date IS NULL
+	OR last_update IS NULL
+	OR active IS NULL;
+ customer_id | store_id | first_name | last_name | email | address_id | activebool | create_date | last_update | active
+-------------+----------+------------+-----------+-------+------------+------------+-------------+-------------+--------
+(0 rows)
+
+-- Search for blanks/null
+SELECT *
+FROM film
+WHERE film_id IS NULL
+	OR title IS NULL
+	OR description IS NULL
+	OR release_year IS NULL
+	OR language_id IS NULL
+	OR rental_duration IS NULL
+	OR rental_rate IS NULL
+	OR length IS NULL
+	OR replacement_cost IS NULL
+	OR rating IS NULL
+	OR last_update IS NULL
+	OR special_features IS NULL
+	OR fulltext IS NULL;
+ film_id | title | description | release_year | language_id | rental_duration | rental_rate | length | replacement_cost | rating | last_update | special_features | fulltext
+---------+-------+-------------+--------------+-------------+-----------------+-------------+--------+------------------+--------+-------------+------------------+----------
+(0 rows)
+
+--find non uniform or incorrect data
+SELECT email
+FROM customer
+WHERE email NOT LIKE '%@%.%';
+ email
+-------
+(0 rows)
+
+--Summarize numeric data
+SELECT MIN(rental_duration),
+       MAX(rental_duration),
+       MAX(rental_duration) - MIN(rental_duration) AS range,
+       ROUND(AVG(rental_duration),2) As average_rental_duration,
+       MODE() WITHIN GROUP (ORDER BY rental_duration) AS mode_rental_duration,
+       PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY rental_duration) AS Q1,
+       PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY rental_duration) AS median,
+       PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY rental_duration) AS Q3,
+       COUNT(rental_duration) AS count_rental_duration,
+       COUNT(*),
+       ROUND(STDDEV(rental_duration), 2) AS standard_deviation
+FROM film;
+ min | max | range | average_rental_duration | mode_rental_duration | q1 | median | q3 | count_rental_duration | count | standard_deviation
+-----+-----+-------+-------------------------+----------------------+----+--------+----+-----------------------+-------+--------------------
+   3 |   7 |     4 |                    4.99 |                    6 |  4 |      5 |  6 |                  1000 |  1000 |               1.41
+(1 row)
+
+--Summarize numeric data
+SELECT MIN(rental_rate),
+       MAX(rental_rate),
+       MAX(rental_rate) - MIN(rental_rate) AS range,
+       ROUND(AVG(rental_rate),2) As average_rental_rate,
+       MODE() WITHIN GROUP (ORDER BY rental_rate) AS mode_rental_rate,
+       PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY rental_rate) AS Q1,
+       PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY rental_rate) AS median,
+       PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY rental_rate) AS Q3,
+       COUNT(rental_rate) AS count_rental_rate,
+       COUNT(*),
+       ROUND(STDDEV(rental_rate), 2) AS standard_deviation
+FROM film;
+
+ min  | max  | range | average_rental_rate | mode_rental_rate |  q1  | median |  q3  | count_rental_rate | count | standard_deviation
+------+------+-------+---------------------+------------------+------+--------+------+-------------------+-------+--------------------
+ 0.99 | 4.99 |  4.00 |                2.98 |             0.99 | 0.99 |   2.99 | 4.99 |              1000 |  1000 |               1.65
+(1 row)
+
