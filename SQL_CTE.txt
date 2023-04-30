@@ -1,0 +1,177 @@
+
+
+--list of ratings for each category of film in the Rockbuster database, including how many times each rating occurs USING JOIN
+SELECT f.rating, c.name AS category, COUNT(c.name) AS category_count
+FROM category c
+INNER JOIN film_category fc
+	ON c.category_id=fc.category_id
+INNER JOIN film f
+	ON fc.film_id=f.film_id
+GROUP BY f.rating, c.name
+ORDER BY f.rating, category_count DESC;
+
+
+--list of ratings for each category of film in the Rockbuster database, including how many times each rating occurs USING CTE
+WITH category_name_cte(film_id, rating, category_name) AS
+(SELECT f.film_id, f.rating, c.name AS category_name
+FROM film f
+LEFT JOIN film_category fc
+	ON f.film_id=fc.film_id
+LEFT JOIN category c
+	ON fc.category_id=c.category_id)
+SELECT rating, category_name, COUNT(film_ID) AS category_count
+FROM category_name_cte
+GROUP BY rating, category_name
+ORDER BY rating, category_count DESC;
+rating | category_name | category_count
+--------+---------------+----------------
+ G      | Action        |             18
+ G      | Documentary   |             14
+ G      | Animation     |             13
+ G      | Foreign       |             13
+ G      | Drama         |             12
+ G      | New           |             12
+ G      | Sports        |             11
+ G      | Classics      |             11
+ G      | Comedy        |             11
+ G      | Travel        |             11
+ G      | Games         |             11
+ G      | Sci-Fi        |             10
+ G      | Children      |             10
+ G      | Horror        |              9
+ G      | Family        |              9
+ G      | Music         |              2
+ G      | Thriller      |              1
+ PG     | Family        |             18
+ PG     | Sports        |             16
+ PG     | Documentary   |             16
+ PG     | Comedy        |             16
+ PG     | Children      |             15
+ PG     | Foreign       |             14
+ PG     | Travel        |             14
+ PG     | Horror        |             12
+ PG     | Sci-Fi        |             12
+ PG     | Animation     |             11
+ PG     | Music         |             10
+ PG     | Classics      |             10
+ PG     | New           |              9
+ PG     | Action        |              9
+ PG     | Drama         |              7
+ PG     | Games         |              5
+ PG-13  | Drama         |             22
+ PG-13  | Foreign       |             19
+ PG-13  | Animation     |             19
+ PG-13  | New           |             15
+ PG-13  | Sports        |             14
+ PG-13  | Children      |             14
+ PG-13  | Games         |             14
+ PG-13  | Horror        |             14
+ PG-13  | Sci-Fi        |             13
+ PG-13  | Classics      |             13
+ PG-13  | Travel        |             12
+ PG-13  | Comedy        |             12
+ PG-13  | Documentary   |             12
+ PG-13  | Family        |             11
+ PG-13  | Action        |             11
+ PG-13  | Music         |              8
+ R      | Sci-Fi        |             17
+ R      | Sports        |             16
+ R      | Family        |             16
+ R      | Games         |             15
+ R      | Foreign       |             15
+ R      | Action        |             14
+ R      | Classics      |             14
+ R      | Horror        |             14
+ R      | Documentary   |             13
+ R      | Music         |             11
+ R      | Travel        |             10
+ R      | Children      |              9
+ R      | New           |              9
+ R      | Comedy        |              8
+ R      | Animation     |              8
+ R      | Drama         |              6
+ NC-17  | Music         |             20
+ NC-17  | New           |             18
+ NC-17  | Sports        |             17
+ NC-17  | Games         |             16
+ NC-17  | Drama         |             15
+ NC-17  | Animation     |             15
+ NC-17  | Family        |             14
+ NC-17  | Documentary   |             13
+ NC-17  | Children      |             12
+ NC-17  | Foreign       |             12
+ NC-17  | Action        |             12
+ NC-17  | Comedy        |             11
+ NC-17  | Travel        |             10
+ NC-17  | Classics      |              9
+ NC-17  | Sci-Fi        |              9
+ NC-17  | Horror        |              7
+(81 rows)
+
+--average amount paid by the top 5 customers using CTE
+WITH avg_amt_pd_top_5_cte(customer_id, first_name, last_name, city, country, total_paid) AS
+(SELECT z.customer_id, z.first_name, z.last_name, y.city, c.country, SUM(p.amount) AS total_paid
+FROM customer z
+INNER JOIN address a
+	ON z.address_id=a.address_id
+INNER JOIN city y
+	ON a.city_id=y.city_id
+INNER JOIN country c
+	ON y.country_id=c.country_id
+INNER JOIN payment p
+	ON z.customer_id=p.customer_id
+WHERE y.city IN ('Aurora', 'Atlixco', 'Xintai', 'Adoni', 'Dhule (Dhulia)', 'Kurashiki', 'Pingxiang', 'So Leopoldo', 'Sivas', 'Celaya')
+GROUP BY z.customer_id, z.first_name, z.last_name, y.city, c.country
+ORDER BY total_paid DESC
+LIMIT 5)
+SELECT ROUND(AVG(total_paid),2) AS avg_amt_paid
+FROM avg_amt_pd_top_5_cte:
+avg_amt_paid
+--------------
+       107.35
+(1 row)
+
+
+--how many of the top 5 customers are based within each country USING CTE
+---“country”
+---“all_customer_count” with the total number of customers in each country
+---“top_customer_count” showing how many of the top 5 customers live in each country
+WITH top_5_customers_cte(customer_id, first_name, last_name, city, country, total_paid) AS
+(SELECT z.customer_id, z.first_name, z.last_name, y.city, c.country, SUM(p.amount) AS total_paid
+		FROM customer z
+		INNER JOIN address a
+			ON z.address_id=a.address_id
+		INNER JOIN city y
+			ON a.city_id=y.city_id
+		INNER JOIN country c
+			ON y.country_id=c.country_id
+		INNER JOIN payment p
+			ON z.customer_id=p.customer_id
+		WHERE c.country IN ('India', 'China', 'United States', 'Japan', 'Mexico', 'Brazil', 'Russian Federation', 'Philippines', 'Turkey', 'Indonesia') 
+		AND y.city IN ('Aurora', 'Atlixco', 'Xintai', 'Adoni', 'Dhule (Dhulia)', 'Kurashiki', 'Pingxiang', 'So Leopoldo', 'Sivas', 'Celaya')
+		GROUP BY z.customer_id, z.first_name, z.last_name, y.city, c.country
+		ORDER BY total_paid DESC
+		LIMIT 5) 
+
+SELECT DISTINCT(c.country), COUNT(DISTINCT z.customer_id) AS all_customer_count, COUNT(DISTINCT c.country) AS top_customer_count
+FROM customer z
+INNER JOIN address a
+	ON z.address_id=a.address_id
+INNER JOIN city y
+	ON a.city_id=y.city_id
+INNER JOIN country c
+	ON y.country_id=c.country_id
+LEFT JOIN top_5_customers_cte
+	ON c.country=top_5_customers_cte.country
+GROUP BY c.country
+ORDER BY all_customer_count DESC
+LIMIT 5;
+   country    | all_customer_count | top_customer_count
+---------------+--------------------+--------------------
+ India         |                 60 |                  1
+ China         |                 53 |                  1
+ United States |                 36 |                  1
+ Japan         |                 31 |                  1
+ Mexico        |                 30 |                  1
+(5 rows)
+
