@@ -1,0 +1,21 @@
+--Looking at total population vs vaccination using CTE
+WITH pop_vs_vacc AS
+(
+SELECT 
+	d.continent,
+	d.location,
+	d.date,
+	d.population,
+	v.new_vaccinations,
+	SUM(new_vaccinations) OVER (PARTITION BY v.location ORDER BY v.location, v.date) AS running_total_new_vacc
+FROM covid_deaths d
+JOIN covid_vaccinations v
+	ON d.location=v.location
+	AND d.date=v.date
+WHERE v.continent IS NOT NULL
+	AND d.location = 'United States'
+ORDER BY 2,3
+)
+SELECT *,
+	running_total_new_vacc/population*100 AS running_percent_vaccinated
+FROM pop_vs_vacc;
