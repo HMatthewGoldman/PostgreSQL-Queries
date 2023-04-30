@@ -1,0 +1,21 @@
+--What are the top 10 countries with highest COVID infection rates?
+SELECT
+	location,
+	max_population,
+	max_cases,
+	SUM(max_cases)/SUM(max_population) * 100 AS percent_infected
+FROM(
+	SELECT 
+		location,
+		MAX(population) AS max_population,
+	   	MAX(total_cases) AS max_cases
+	FROM public.covid_deaths
+	GROUP BY 
+		location) AS CasesByPopulation
+GROUP BY 
+	casesbypopulation.location,
+	max_population,
+	max_cases
+ORDER BY 
+	 percent_infected DESC NULLS LAST
+LIMIT 10
