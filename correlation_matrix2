@@ -1,6 +1,4 @@
---http://www.silota.com/docs/recipes/sql-correlation-coefficient-matrix-summary.html
---SELECT *
---FROM public.correlation_matrix;
+
 
 SELECT variable1,
 	SUM(CASE WHEN variable2='reproduction_rate'THEN correlation ELSE 0 END) as reproduction_rate,
