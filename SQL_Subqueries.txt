@@ -1,0 +1,117 @@
+3.8 Scripts
+
+--maximum amount paid for any movie in the Rockbuster database
+SELECT title, rating, release_year,
+	(SELECT MAX(amount)
+	FROM payment) AS max_amount
+FROM film;
+            title            | rating | release_year | max_amount
+-----------------------------+--------+--------------+------------
+ Chamber Italian             | NC-17  |         2006 |      11.99
+ Grosse Wonderful            | R      |         2006 |      11.99
+ Airport Pollock             | R      |         2006 |      11.99
+ Bright Encounters           | PG-13  |         2006 |      11.99
+ Academy Dinosaur            | PG     |         2006 |      11.99
+
+--movies whose rental rate is lower than the average payment made
+SELECT film_id, title, rating, rental_rate
+FROM film
+WHERE rental_rate <
+	(SELECT AVG(amount)
+	FROM payment)
+ORDER BY rental_rate DESC
+LIMIT 10;
+ film_id |       title       | rating | rental_rate
+---------+-------------------+--------+-------------
+      22 | Amistad Midsummer | G      |        2.99
+      24 | Analyze Hoosiers  | R      |        2.99
+      15 | Alien Center      | NC-17  |        2.99
+      16 | Alley Evolution   | NC-17  |        2.99
+       9 | Alabama Devil     | PG-13  |        2.99
+       4 | Affair Prejudice  | G      |        2.99
+       5 | African Egg       | G      |        2.99
+       3 | Adaptation Holes  | NC-17  |        2.99
+       6 | Agent Truman      | PG     |        2.99
+      25 | Angels Life       | G      |        2.99
+(10 rows)
+
+--how many films are rated G, PG, or PG-13, and how many films are less than 100-minutes long
+SELECT COUNT(shortmovie.film_id) AS movie_count, shortmovie.rating
+FROM
+	(SELECT film.film_id, film.title, film.rating
+	FROM film
+	Where film.length <= 100) AS shortmovie
+WHERE shortmovie.rating IN ('G', 'PG', 'PG-13')
+GROUP BY rating
+ORDER BY movie_count DESC;
+ movie_count | rating
+-------------+--------
+          81 | PG
+          78 | G
+          74 | PG-13
+(3 rows)
+--Successfully run. Total query runtime: 38 msec.
+3 rows affected.
+
+--average amount paid by the top 5 customers
+SELECT ROUND(AVG(total_amount_paid.total_paid),2) AS avg_amt_paid
+FROM
+(SELECT z.customer_id, z.first_name, z.last_name, y.city, c.country, SUM(p.amount) AS total_paid
+FROM customer z
+INNER JOIN address a
+	ON z.address_id=a.address_id
+INNER JOIN city y
+	ON a.city_id=y.city_id
+INNER JOIN country c
+	ON y.country_id=c.country_id
+INNER JOIN payment p
+	ON z.customer_id=p.customer_id
+WHERE y.city IN ('Aurora', 'Atlixco', 'Xintai', 'Adoni', 'Dhule (Dhulia)', 'Kurashiki', 'Pingxiang', 'So Leopoldo', 'Sivas', 'Celaya')
+GROUP BY z.customer_id, z.first_name, z.last_name, y.city, c.country
+ORDER BY total_paid DESC
+LIMIT 5) AS total_amount_paid;
+ avg_amt_paid
+--------------
+       107.35
+(1 row)
+
+--how many of the top 5 customers are based within each country
+---“country”
+---“all_customer_count” with the total number of customers in each country
+---“top_customer_count” showing how many of the top 5 customers live in each country
+SELECT DISTINCT(c.country), COUNT(DISTINCT z.customer_id) AS all_customer_count, COUNT(DISTINCT c.country) AS top_customer_count
+FROM customer z
+INNER JOIN address a
+	ON z.address_id=a.address_id
+INNER JOIN city y
+	ON a.city_id=y.city_id
+INNER JOIN country c
+	ON y.country_id=c.country_id
+LEFT JOIN (SELECT z.customer_id, z.first_name, z.last_name, y.city, c.country, SUM(p.amount) AS total_paid
+		FROM customer z
+		INNER JOIN address a
+			ON z.address_id=a.address_id
+		INNER JOIN city y
+			ON a.city_id=y.city_id
+		INNER JOIN country c
+			ON y.country_id=c.country_id
+		INNER JOIN payment p
+			ON z.customer_id=p.customer_id
+		WHERE c.country IN ('India', 'China', 'United States', 'Japan', 'Mexico', 'Brazil', 'Russian Federation', 'Philippines', 'Turkey', 'Indonesia') 
+		AND y.city IN ('Aurora', 'Atlixco', 'Xintai', 'Adoni', 'Dhule (Dhulia)', 'Kurashiki', 'Pingxiang', 'So Leopoldo', 'Sivas', 'Celaya')
+		GROUP BY z.customer_id, z.first_name, z.last_name, y.city, c.country
+		ORDER BY total_paid DESC
+		LIMIT 5) AS top_5_customers
+	ON c.country=top_5_customers.country
+GROUP BY c.country
+ORDER BY all_customer_count DESC
+LIMIT 5;
+    country    | all_customer_count | top_customer_count
+---------------+--------------------+--------------------
+ India         |                 60 |                  1
+ China         |                 53 |                  1
+ United States |                 36 |                  1
+ Japan         |                 31 |                  1
+ Mexico        |                 30 |                  1
+(5 rows)
+
