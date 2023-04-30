@@ -1,0 +1,22 @@
+--TOPIC: Reproduction Rate
+--How did Population density affect reproduction rate
+SELECT 
+	CORR(avg_reproduction_rate,pop_density) AS reproduction_popdensity_correlation
+FROM(
+	SELECT
+		cd.location,
+		AVG(cd.reproduction_rate) AS avg_reproduction_rate,
+		MAX(dem.population_density) AS pop_density
+	FROM public.covid_deaths cd
+		JOIN public.covid_demographics dem
+			ON cd.location=dem.location
+	GROUP BY cd.location) AS ReproductionRateByPopulationDensity
+
+SELECT
+	cd.location,
+	CORR(cd.reproduction_rate,dem.population_density)
+FROM public.covid_deaths cd
+	JOIN public.covid_demographics dem
+		ON cd.location=dem.location
+WHERE cd.location NOT IN ('World','Europe','North America','European Union','South America','Asia','Africa','Oceania','High income','Low income','Lower middle income','Upper middle income')
+GROUP BY cd.location
