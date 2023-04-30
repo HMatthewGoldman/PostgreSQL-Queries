@@ -1,0 +1,12 @@
+SELECT
+	location,
+	DATE_PART('year', date) AS year,
+	DATE_PART('month', date) AS month,
+	MAX(total_cases) AS running_total,
+--	SUM(new_cases) AS last_value
+	MAX(population) AS total_population,
+	MAX(total_cases)/MAX(population)*100 AS PercentInfected
+FROM public.covid_deaths
+WHERE location = 'United States'
+GROUP BY 1,2,3
+ORDER BY 1,2,3;
